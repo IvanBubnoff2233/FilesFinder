@@ -24,6 +24,28 @@ func askUserRootFile() (string, error) {
 	return exp, nil
 }
 
+func askDirectory() string {
+	fmt.Print("Введите директорию для поиска файла (например C:\\ или C:\\...) ")
+	var dir string
+	fmt.Scan(&dir)
+
+	return dir
+}
+
+func ExitProgram() bool {
+	fmt.Println("Вы желаете выйти из программы? y(да) или n(нет)")
+	var e string
+	fmt.Scan(&e)
+
+	input := strings.ToLower(e)
+
+	if input == "y" {
+		return false
+	}
+
+	return true
+}
+
 func searchFiles(root string, extension string) ([]string, error) {
 	var files []string
 
@@ -38,40 +60,58 @@ func searchFiles(root string, extension string) ([]string, error) {
 		if !info.IsDir() && strings.EqualFold(filepath.Ext(info.Name()), extension) {
 			files = append(files, path)
 		}
+
+		if strings.Contains(path, "Windows") || strings.Contains(path, "Recovery") || strings.Contains(path, "System32") {
+			return filepath.SkipDir // Пропускаем эти папки
+		}
 		return nil
 	})
 	return files, err
 }
 
 func run() bool {
-	res, err := askUserRootFile()
-	if err != nil {
-		fmt.Println(err)
-		return true
+	//Получаем расширение от пользователя и обрабатываем ошибки
+	var resUserRoot string
+	for {
+		res, err := askUserRootFile()
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			resUserRoot = res
+			break
+		}
 	}
 
-	direct := "C:\\"
+	//Получаем директорию для поиска файла с расширением пользователя и обратывываем ошибки
+	var dir string
+	for {
+		dir = askDirectory()
+		if _, err := os.Stat(dir); os.IsNotExist(err) {
+			fmt.Println("Данная директория не существует. Попробуйте еще раз...")
+		} else {
+			break
+		}
+	}
 
-	sliceFiles, err := searchFiles(direct, res)
+	//Запускаем поиск файла в системе пользователя
+	sliceFiles, err := searchFiles(dir, resUserRoot)
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	//Выводим список путей найденных файлов
 	for _, v := range sliceFiles {
 		fmt.Println(v)
 	}
 
-	fmt.Println("Введите e чтобы выйти ")
-	var e string
-	fmt.Scan(&e)
-	if e == "e" {
-		return false
-	}
+	//Выход из программы
+	ext := ExitProgram()
 
-	return true
+	return ext
 }
 
 func main() {
+	fmt.Println(``)
 	for run() {
 	}
 }
