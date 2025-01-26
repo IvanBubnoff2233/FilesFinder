@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 var (
@@ -93,16 +94,21 @@ func run() bool {
 		}
 	}
 
+	now := time.Now()
 	//Запускаем поиск файла в системе пользователя
 	sliceFiles, err := searchFiles(dir, resUserRoot)
 	if err != nil {
 		fmt.Println(err)
 	}
 
+	theGap := time.Since(now).Minutes()
+
 	//Выводим список путей найденных файлов
 	for _, v := range sliceFiles {
 		fmt.Println(v)
 	}
+
+	fmt.Println("Программа выполнилась за", theGap)
 
 	//Выход из программы
 	ext := ExitProgram()
@@ -111,7 +117,9 @@ func run() bool {
 }
 
 func main() {
+
 	fmt.Println(``)
 	for run() {
 	}
+
 }
